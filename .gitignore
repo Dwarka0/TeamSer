@@ -1,0 +1,32 @@
+# Build artefacts
+bin/
+obj/
+publish/
+.wrangler-dry/
+.wrangler/
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Test / coverage
+TestResults/
+coverage/
+
+# Local secrets - never commit these
+*.bin
+secrets.bin
+entropy.bin
+config.json
+.env
+.env.local
+
+# OS
+Thumbs.db
+desktop.ini

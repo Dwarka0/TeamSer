@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "hono": "^4",
+    "hash-wasm": "^4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4",
+    "typescript": "^5",
+    "vitest": "^1"
+  },
+  "name": "teamser-backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "bridge": "node ../../scripts/print-migrations.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

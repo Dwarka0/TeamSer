@@ -1,0 +1,36 @@
+// Cloudflare Worker configuration.
+// Secrets are never checked in. Set them with:
+//   wrangler secret put ADMIN_PASSWORD_HASH
+//   wrangler secret put SESSION_SECRET
+//   wrangler secret put BOOTSTRAP_TOKEN
+// D1 database_id must be replaced with the real id after `wrangler d1 create`.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "teamser-auth-backend",
+  "main": "src/Backend/src/index.ts",
+  "compatibility_date": "2025-10-01",
+  "workers_dev": true,
+  "observability": { "enabled": false },
+  "triggers": {
+    // Daily retention prune: old revoked sessions, audit log, rate-limit buckets.
+    "crons": ["0 3 * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ts3-auth",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "database/migrations"
+    }
+  ],
+  "vars": {
+    // Comma-separated exact origins. Default is a placeholder the admin must change.
+    "ALLOWED_ORIGINS": "https://team.local",
+    // Access-token lifetime in seconds; the refresh token lives much longer.
+    "ACCESS_TOKEN_TTL": "900",
+    "REFRESH_TOKEN_TTL": "604800",
+    // Sliding window in seconds, and the max failed logins allowed within it.
+    "RATE_WINDOW": "60",
+    "RATE_MAX_LOGIN": "10"
+  }
+}

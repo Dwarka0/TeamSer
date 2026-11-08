@@ -1,0 +1,356 @@
+﻿<Window x:Class="TeamSpeakManager.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:TeamSpeakManager.Desktop.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:AppViewModel}"
+        FlowDirection="RightToLeft"
+        Title="TeamSer"
+        Width="1000" Height="660" MinWidth="840" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource WindowBrush}"
+        FontFamily="Segoe UI, Tahoma"
+        TextOptions.TextFormattingMode="Display">
+
+    <Window.Resources>
+        <!-- BoolToVis and StrToVis are registered in App.xaml -->
+    </Window.Resources>
+
+    <Grid>
+    <!-- LOGIN GATE -->
+    <Grid>
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Setter Property="Visibility" Value="Visible"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsLoggedIn}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
+        <Grid>
+            <Grid Background="{StaticResource WindowBrush}"/>
+            <Grid MaxWidth="380">
+                <Border Style="{StaticResource Card}" VerticalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource H1}" Text="TeamSer" TextAlignment="Center"
+                                   FlowDirection="RightToLeft" Margin="0,0,0,4"/>
+                        <TextBlock Style="{StaticResource Hint}" Text="برای دسترسی رمز مشترک خود را وارد کنید."
+                                   TextAlignment="Center" Margin="0,0,0,18"/>
+
+                        <TextBlock Style="{StaticResource Label}" Text="رمز عبور دسترسی" Margin="0,0,0,6"/>
+                        <PasswordBox x:Name="PasswordBox"
+                                     Password="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                                     FlowDirection="RightToLeft" Margin="0,0,0,14"
+                                     KeyDown="PasswordBox_KeyDown"/>
+
+                        <Button Content="ورود به برنامه" Command="{Binding LoginCommand}" IsDefault="True"
+                                Height="42" FontSize="15"/>
+
+                        <ProgressBar Height="4" Margin="0,10,0,0"
+                                     Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"
+                                     IsIndeterminate="True" Foreground="{StaticResource AccentBrush}"/>
+
+                        <TextBlock Text="{Binding LoginError}" Foreground="{StaticResource StateErrorBrush}"
+                                   TextWrapping="Wrap" TextAlignment="Center"
+                                   Visibility="{Binding LoginError, Converter={StaticResource StrToVis}}"
+                                   Margin="0,10,0,0"/>
+
+                        <TextBlock Text="{Binding LockoutRemaining, StringFormat=مسیر باقی‌مانده: {0}}"
+                                   Foreground="{StaticResource StateBusyBrush}" TextAlignment="Center"
+                                   Visibility="{Binding IsLockedOut, Converter={StaticResource BoolToVis}}"
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+</Grid>
+
+    <!-- AUTHENTICATED SHELL -->
+    <Grid>
+        <Grid.Style>
+            <Style TargetType="Grid">
+                <Setter Property="Visibility" Value="Collapsed"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsLoggedIn}" Value="True">
+                        <Setter Property="Visibility" Value="Visible"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Grid.Style>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Style="{StaticResource Card}" Margin="20,20,20,0">
+            <DockPanel LastChildFill="False">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="12" Height="12" VerticalAlignment="Center" Margin="0,0,10,0"
+                             Fill="{Binding Server.StatusBrush}"/>
+                    <TextBlock Text="TeamSer" Style="{StaticResource H1}"/>
+                </StackPanel>
+                <Button DockPanel.Dock="Left" Content="خروج" Command="{Binding LogoutCommand}"
+                        HorizontalAlignment="Left"/>
+            </DockPanel>
+        </Border>
+
+        <TabControl Grid.Row="1" Margin="20,16,20,0">
+            <TabItem Header="داشبورد">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,12,0,0">
+
+                        <!-- Status + metrics -->
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                    <TextBlock Style="{StaticResource Label}" Text="وضعیت سرور"/>
+                                    <TextBlock Style="{StaticResource Value}"
+                                               Text="{Binding Server.StateText}"
+                                               Foreground="{Binding Server.StatusBrush}"
+                                               FontSize="18" FontWeight="SemiBold"
+                                               FlowDirection="RightToLeft"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="1">
+                                    <TextBlock Style="{StaticResource Label}" Text="کاربران متصل"/>
+                                    <TextBlock Style="{StaticResource Value}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0} / {1}">
+                                                <Binding Path="Server.ConnectedClients"/>
+                                                <Binding Path="Server.MaxClients"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="2">
+                                    <TextBlock Style="{StaticResource Label}" Text="مدت روشن بودن"/>
+                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Server.UptimeText}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="3">
+                                    <TextBlock Style="{StaticResource Label}" Text="وضعیت نصب"/>
+                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Server.InstallationText}"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Row="1" Grid.ColumnSpan="4" Text="{Binding Server.Error}"
+                                           Foreground="{StaticResource StateErrorBrush}" TextWrapping="Wrap"
+                                           Margin="0,12,0,0" Visibility="{Binding Server.Error, Converter={StaticResource StrToVis}}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Controls -->
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource Label}" Text="کنترل سرور" Margin="0,0,0,10"/>
+                                <WrapPanel>
+                                    <Button Content="روشن کردن" Command="{Binding Server.StartCommand}" Margin="0,0,8,8" MinWidth="110"/>
+                                    <Button Content="خاموش کردن" Style="{StaticResource DangerButton}"
+                                            Command="{Binding Server.StopCommand}" Margin="0,0,8,8" MinWidth="110"/>
+                                    <Button Content="راه‌اندازی دوباره" Command="{Binding Server.RestartCommand}" Margin="0,0,8,8" MinWidth="130"/>
+                                    <Button Content="بروزرسانی وضعیت" Command="{Binding Server.RefreshCommand}" Margin="0,0,8,8" MinWidth="130"/>
+                                    <Button Content="پوشه سرور" Command="{Binding Server.OpenDirectoryCommand}" Margin="0,0,8,8" MinWidth="110"/>
+                                    <Button Content="پوشه لاگ‌ها" Command="{Binding Server.OpenLogsCommand}" Margin="0,0,8,8" MinWidth="110"/>
+                                </WrapPanel>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                    <TextBlock Style="{StaticResource Label}" Text="پوشه نصب:" Margin="0,0,10,0"/>
+                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Server.ServerDirectory, TargetNullValue=—}"/>
+                                    <Button Content="انتخاب پوشه نصب" Command="{Binding Server.PickDirectoryCommand}" Margin="14,0,0,0"/>
+                                </StackPanel>
+
+                                <TextBlock Text="{Binding Server.BusyText}" Style="{StaticResource Hint}"
+                                           Margin="0,8,0,0"
+                                           Visibility="{Binding Server.BusyText, Converter={StaticResource StrToVis}}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Network summary -->
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource Label}" Text="آدرس اتصال" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="6" Padding="12,8">
+                                        <TextBlock Text="{Binding Server.ConnectionAddress}" Style="{StaticResource Value}" FontSize="16"/>
+                                    </Border>
+                                    <Button Content="کپی آدرس اتصال" Command="{Binding CopyAddressCommand}"
+                                            Margin="10,0,0,0"/>
+                                </StackPanel>
+                                <TextBlock Text="اتصال به بیرون از اینترنت فقط با ارسال UDP 9987 ممکن است. برای یادگیری مشکل CGNAT به تب «شبکه» بروید."
+                                           Style="{StaticResource Hint}" Margin="0,10,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="شبکه">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,12,0,0">
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                    <TextBlock Style="{StaticResource Label}" Text="آدرس داخلی IPv4"/>
+                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Network.LocalIp}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="1">
+                                    <TextBlock Style="{StaticResource Label}" Text="آدرس عمومی IPv4"/>
+                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Network.PublicIp}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,14,0,0">
+                                    <TextBlock Style="{StaticResource Label}" Text="پورت صوتی UDP"/>
+                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Network.VoicePort}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,14,0,0">
+                                    <TextBlock Style="{StaticResource Label}" Text="آدرس صوتی"/>
+                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Network.VoiceAddress}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,14,0,0">
+                                    <TextBlock Style="{StaticResource Label}" Text="پورت انتقال فایل TCP"/>
+                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Network.FilePort}"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,14,0,0">
+                                    <TextBlock Style="{StaticResource Label}" Text="کارت شبکه"/>
+                                    <TextBlock Style="{StaticResource Value}" Text="{Binding Network.Binding, TargetNullValue=—}"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Text="{Binding Network.CgNatNote}"
+                                           TextWrapping="Wrap" Margin="0,16,0,0"
+                                           Foreground="{StaticResource StateBusyBrush}"
+                                           Visibility="{Binding Network.CgNatNote, Converter={StaticResource StrToVis}}"/>
+                            </Grid>
+                        </Border>
+
+                        <Button Content="بروزرسانی تشخیص شبکه" Command="{Binding RefreshNetworkCommand}"/>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="لازم است: فایروال ویندوز باید برای پورت UDP 9987 مجوز ورود بدهد و روتور باید پورت UDP 9987 را به این دستگاه ارسال کند."
+                                           Style="{StaticResource Hint}" Margin="0,0,0,8"/>
+                                <TextBlock Text="در صورت CGNAT روتور فایروال ندارد و هیچ تغییر پورت‌فورواردی به موفقیت کمک نمی‌کند."
+                                           Style="{StaticResource Hint}" Margin="0,0,0,8"/>
+                                <TextBlock Text="این برنامه هیچ تغییری در فایروال یا تنظیمات روتر نمی‌دهد."
+                                           Style="{StaticResource Hint}"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="لاگ‌ها">
+                <Grid Margin="0,12,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="پوشه لاگ‌ها" Command="{Binding Server.OpenLogsCommand}" Margin="0,0,8,0"/>
+                        <Button Content="بروزرسانی لاگ‌ها" Command="{Binding Server.RefreshCommand}"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="1" Style="{StaticResource Card}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" FlowDirection="LeftToRight">
+                            <TextBlock Text="{Binding LogText, TargetNullValue=لاگی یافت نشد}"
+                                       FontFamily="Consolas" FontSize="12"
+                                       Foreground="{StaticResource SubTextBrush}"
+                                       TextWrapping="NoWrap"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="تنظیمات">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="0,12,0,0">
+
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource Label}" Text="پوشه نصب سرور (حاوی ts3server.exe)" Margin="0,0,0,6"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox Width="420" Text="{Binding Config.ServerDirectory, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <Button Content="انتخاب" Margin="8,0,0,0" Command="{Binding Server.PickDirectoryCommand}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource Label}" Text="نشانی سرور تأید (Cloudflare Worker)" Margin="0,0,0,6"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox Width="420" Text="{Binding Config.BackendBaseUrl, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <Button Content="اعمال" Margin="8,0,0,0" Command="{Binding SaveSettingsCommand}"/>
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0"
+                                           Text="برای تغییر آدرس، ذخیره کنید تا اتصال مجدد برقرار شود."/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource Label}" Text="رابط پورت پیش‌فرض (ServerQuery)" Margin="0,0,0,6"/>
+                                <TextBlock Style="{StaticResource Hint}"
+                                           Text="ServerQuery فقط به 127.0.0.1 متصل می‌شود. عبارت‌های عبور ServerQuery در تنظیمات ذخیره و هرگز در لاگ نمایش داده نمی‌شود."
+                                           Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox Width="260" Text="{Binding Config.QueryUser, UpdateSourceTrigger=PropertyChanged}"/>
+                                    <PasswordBox x:Name="QueryPasswordBox" Width="260" Margin="8,0,0,0"
+                                             PasswordChanged="QueryPasswordBox_Changed"/>
+                                    <Button Content="ذخیره رمز ServerQuery" Margin="8,0,0,0" Command="{Binding SaveQueryPasswordCommand}"/>
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Hint}" Text="{Binding QueryPasswordStatus}" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource Label}" Text="خروج از حساب (فقط حذف دسترسی محلی)" Margin="0,0,0,6"/>
+                                <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,8"
+                                           Text="اگر رمز عبور مشترک را روی سرور تأیید عوض یا باطل کردید، دکمه زیر نشانی را حذف می‌کند تا درخواست مجدد انجام شود."/>
+                                <Button Content="حذف دسترسی محلی" Style="{StaticResource DangerButton}"
+                                        Command="{Binding LogoutCommand}" HorizontalAlignment="Right"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- Status bar -->
+        <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" Padding="20,7" Margin="20,10,20,16" CornerRadius="7">
+            <DockPanel LastChildFill="False">
+                <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Hint}"/>
+                <TextBlock DockPanel.Dock="Left" Text="یک نمونه در هر سیستم" Style="{StaticResource Hint}"/>
+            </DockPanel>
+        </Border>
+    </Grid>
+    </Grid>
+</Window>
